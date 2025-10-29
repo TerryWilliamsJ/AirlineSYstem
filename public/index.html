@@ -1,482 +1,310 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="description" content="AlfaVox is a CMS Portfolio by Alfa Groups. Learn more about AlfaVox features, pricing, and benefits.">
-    <meta name="description" content="Build and manage your portfolio with our powerful CMS-based portfolio creator. Perfect for developers, designers, and freelancers.">
-  <meta name="keywords" content="portfolio, cms portfolio, create portfolio, developer portfolio, designer portfolio">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AlfaVox Portfolio - Your Voice. Your Work. Your Future.</title>
-    <link rel="icon" href="favicon.png" type="image/png">
-    <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Alfa Groups",
-    "url": "https://alfagroups.me",
-    "logo": "https://alfagroups.me/alfavox-logo.png"
-  }
-  </script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/land.css">
-    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
-      <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-analytics-compat.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Simple Airline Reservation UI</title>
+  <style>
+    :root{--accent:#0b67ff;--muted:#6b7280;--card:#ffffff;--bg:#f3f4f6}
+    *{box-sizing:border-box}
+    body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background:var(--bg); margin:0; color:#111}
+    header{background:linear-gradient(90deg,var(--accent),#2bb3ff); color:white; padding:28px 20px}
+    .container{max-width:1100px;margin:20px auto;padding:0 16px}
+    h1{margin:0;font-size:20px}
+
+    /* Search card */
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(16,24,40,0.06)}
+    .search-grid{display:grid;grid-template-columns:1fr 1fr 180px 120px;gap:12px;align-items:end}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input[type=text], input[type=date], select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6e9ef}
+    .btn{background:var(--accent);color:white;padding:10px 14px;border:none;border-radius:10px;cursor:pointer}
+    .btn.secondary{background:#eef2ff;color:var(--accent);border:1px solid rgba(11,103,255,0.12)}
+
+    /* Results */
+    .results{margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+    .flight{padding:12px;border-radius:10px;border:1px solid #eef2f5;background:white}
+    .flight h3{margin:0;font-size:16px}
+    .flight .meta{color:var(--muted);font-size:13px;margin-top:6px}
+    .flight .fare{font-weight:700;margin-top:10px}
+
+    /* Booking modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.5);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal{background:white;border-radius:12px;max-width:920px;width:100%;padding:18px;box-shadow:0 12px 30px rgba(2,6,23,0.4)}
+    .modal-grid{display:grid;grid-template-columns:1fr 360px;gap:12px}
+    .seat{width:34px;height:34px;border-radius:6px;display:inline-grid;place-items:center;margin:6px;border:1px solid #e6e9ef;cursor:pointer}
+    .seat.available{background:#f8fafc}
+    .seat.selected{background:var(--accent);color:white}
+    .seat.taken{background:#f3f4f6;color:#9ca3af;cursor:not-allowed}
+
+    /* responsive */
+    @media (max-width:820px){
+      .search-grid{grid-template-columns:1fr 1fr;}
+      .modal-grid{grid-template-columns:1fr}
+    }
+
+    footer{text-align:center;color:var(--muted);padding:16px 0;font-size:13px}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header with Navigation -->
-        <header class="main-header">
-            <div class="header-content">
-                <div class="logo">
-                    <h1>AlfaVox</h1>
-                    <span>Portfolio</span>
-                </div>
-                <div class="nav">
-                    <div class="nav-item active" data-page="home">Home</div>
-                    <div class="nav-item" data-page="dashboard" id="dashboardNav">Dashboard</div>
-                    <div class="nav-item" data-page="subscribe" id="subscribeNav">Subscribe</div>
-                </div>
-                <div class="auth-section" id="authSection">
-    <a href="login.html" class="btn btn-primary">Login</a>
-</div>
-            </div>
-            
-        </header>
-
-        <!-- Hero Section -->
-        <div class="page active" id="homePage">
-            <section class="hero">
-                <div class="hero-content">
-                    <h1>Your Voice. Your Work. Your Future.</h1>
-                    <p class="subtitle">Built by a Student. For Every Dreamer.<br>Some Wishes Aren’t Spoken. They’re Built — Welcome to <b>AlfaVox</b></p>
-                    
-                    <div class="hero-buttons">
-                        <button id="startTrialBtn" class="btn btn-primary">Start Free Trial</button>
-                        <a href="#plans" class="btn btn-outline">View Plans</a>
-                        <a href="prevpro.html" target="_blank" class="btn btn-primary">Preview Theme</a>
-
-                    </div>
-                </div>
-                <div class="hero-image">
-                    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1471&q=80" alt="Students collaborating">
-                </div>
-            </section>
-
-            <!-- About Section -->
-            <section id="about" class="about-section">
-                <div class="section-header">
-                    <h2>The AlfaVox Story</h2><img src="alfavox-logo copy.png" alt="AlfaVox Logo" class="section-logo">
-                    <div class="divider"></div>
-                </div>
-                
-                <div class="about-content">
-                    <div class="about-card">
-                        <div class="card-icon">
-                            <i class="fas fa-lightbulb"></i>
-                        </div>
-                        <h3>Our Beginning</h3>
-                        <p>AlfaVox started as a dream in a small student hostel room — just one engineering student struggling to build a portfolio that truly reflected his skills, faith, and hard work.</p>
-                        <blockquote>"Why should showcasing talent be a luxury? Why isn't there a simple, student-first space to own your story?"</blockquote>
-                        <p>So he built AlfaVox — a clean, affordable, CMS-powered portfolio builder for students, job seekers, and professionals in India. Not backed by big investors. Just faith, late nights, and the hope to help others shine.</p>
-                    </div>
-                    
-                    <div class="about-card">
-                        <div class="card-icon">
-                            <i class="fas fa-heart"></i>
-                        </div>
-                       <h3>Why "AlfaVox"?</h3>
-<p>
-    Some beginnings carry silent stories.<br>
-    This isn't just a launch — it's a whisper of something deeply personal.<br><br>
-    On this very date, a quiet wish takes form not in words, but in creation.<br>
-    Sometimes, what we can’t say directly, we express through the things we build.<br><br>
-    So here it is — a dream born from admiration, launched with hope.<br>
-    <strong>Not All Wishes Are Spoken. Some Become Launch Dates
-</strong> 
-</p>
- </div>
-                </div>
-            </section>
-
-            <!-- Mission Section -->
-            <section class="mission-section">
-                <div class="mission-content">
-                    <h2>Make Violence — With Your Talent</h2>
-                    <p class="mission-statement">Not the violence of hate — the violence of presence. Shake the system. Disrupt the quiet. Put your portfolio out there so loudly they can't ignore you.</p>
-                    <div class="mission-points">
-                        <div class="point">
-                            <i class="fas fa-bullhorn"></i>
-                            <p>Too many students stay hidden. Too many job seekers go unnoticed.</p>
-                        </div>
-                        <div class="point">
-                            <i class="fas fa-folder-open"></i>
-                            <p>Don't let your skills sit in a folder. Don't keep your story in your head.</p>
-                        </div>
-                        <div class="point">
-                            <i class="fas fa-handshake"></i>
-                            <p>Join me — not as a customer, but as a partner in purpose.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Creator Note -->
-            <section class="creator-note">
-                <div class="creator-image">
-                    <img src="creator img.png" alt="Student working">
-                </div>
-                <div class="creator-message">
-                    <h2>A Note from the Creator</h2>
-                    <p>"We're building AlfaVox with love, late nights, and the dream of helping students shine."</p>
-                    <p>I'm not a big tech company. I'm just a student — like many of you — who once needed a portfolio and couldn't afford the fancy platforms or complicated tools.</p>
-                    <p>So I started building AlfaVox — a CMS-based portfolio system made for students, job seekers, and working professionals in India. To give everyone a place to share their story, show their work, and walk toward their dreams.</p>
-                    <div class="signature">
-                        <p>— With heart,</p>
-                        <!-- <p>Built Not to Impress, But to Express — <b>Alfa</b>Vox Is Here -->
-</p>
-                        <p>The Creator of AlfaVox</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Why Subscribe Section -->
-            <section class="why-subscribe">
-                <h2>Why a Subscription Model?</h2>
-                <p>We know money matters — especially when you're in college or starting out. But to offer quality service, we need to cover our costs:</p>
-                
-                <div class="features-grid">
-                    <div class="feature">
-                        <i class="fas fa-shield-alt"></i>
-                        <h3>Secure Storage</h3>
-                        <p>Your work is protected with enterprise-grade security</p>
-                    </div>
-                    <div class="feature">
-                        <i class="fas fa-server"></i>
-                        <h3>24/7 Uptime</h3>
-                        <p>Your portfolio is always available when you need it</p>
-                    </div>
-                    <div class="feature">
-                        <i class="fas fa-ad"></i>
-                        <h3>No Ads</h3>
-                        <p>Your portfolio stays clean and professional</p>
-                    </div>
-                    <div class="feature">
-                        <i class="fas fa-lock"></i>
-                        <h3>Privacy</h3>
-                        <p>We don't sell your data or track your visitors</p>
-                    </div>
-                    <div class="feature">
-                        <i class="fas fa-star"></i>
-                        <h3>Unlimited Themes</h3>
-                        <p class="theme-note">
-    <p class="theme-note">
-    Choose your theme in the User Admin panel. If it disappoints, we apologize — AlfaVox is working to improve it.</p>
-
-</p>
-                    <!-- </div><div class="feature">
-                        <i class="fas fa-heart"></i>
-                        <h3>With Heart</h3>
-                        <p>What I Couldn't Tell Her, I Built Into a Dream — AlfaVox is Live.<br>Not All Wishes Are Spoken. Some Become Launch Dates
-</p>
-                    </div>
-                </div> -->
-                
-                <!-- <p class="note">Your small subscription keeps this independent Indian startup alive — and helps us keep improving for you.</p> -->
-            </section>
-
-            <!-- Plans Section -->
-            <section id="plans" class="plans-section">
-                <div class="section-header">
-                    <h2>AlfaVox Portfolio Plans</h2>
-                    <p>Built by a student. Priced for your journey.</p>
-                    <div class="divider"></div>
-                </div>
-                
-                <div class="plans">
-                    <div class="plan-card">
-                        <div class="plan-header">
-                            <h3>Starter Plan</h3>
-                            <div class="price">₹30<span>/30 Days</span></div>
-                        </div>
-                        <ul>
-                            
-                            <li><i class="fas fa-check"></i> Modern templates</li>
-                            <li><i class="fas fa-check"></i> Mobile responsive</li>
-                            <li><i class="fas fa-check"></i> Standard domain</li>
-                            <li><i class="fas fa-check"></i> Easy admin panel</li>
-                            <li><i class="fas fa-check"></i> Priority support</li>
-                        </ul>
-                        <button class="btn btn-primary plan-subscribe" data-plan="30">Subscribe</button>
-                    </div>
-                    
-                    <div class="plan-card featured">
-                        
-                        <div class="plan-header">
-                            <h3>Aspire Plan</h3>
-                            <div class="price">₹60<span>/60 Days</span></div>
-                            <div class="price-note"></div>
-                        </div>
-                        <ul>
-                            <li><i class="fas fa-check"></i> Modern templates</li>
-                            <li><i class="fas fa-check"></i> Mobile responsive</li>
-                            <li><i class="fas fa-check"></i> Standard domain</li>
-                            <li><i class="fas fa-check"></i> Easy admin panel</li>
-                            <li><i class="fas fa-check"></i> Priority support</li>
-                        </ul>
-                        <button class="btn btn-primary plan-subscribe" data-plan="60">Subscribe</button>
-                    </div>
-                    
-                    <div class="plan-card">
-                        <div class="plan-header">
-                            <h3>Launchpad Plan</h3>
-                            <div class="price">₹90<span>/90 Days</span></div>
-                            <div class="price-note"></div>
-                        </div>
-                        <ul>
-                            <li><i class="fas fa-check"></i> Modern templates</li>
-                            <li><i class="fas fa-check"></i> Mobile responsive</li>
-                            <li><i class="fas fa-check"></i> Standard domain</li>
-                            <li><i class="fas fa-check"></i> Easy admin panel</li>
-                            <li><i class="fas fa-check"></i> Priority support</li>
-                        </ul>
-                        <button class="btn btn-primary plan-subscribe" data-plan="90">Subscribe</button>
-                    </div>
-                </div>
-                
-                <div class="custom-plan">
-                    <div class="custom-content">
-                        <h3><i class="fas fa-star"></i> Custom Portfolios</h3>
-                        <p>For musicians, freelancers, startups, teachers, academics, and anyone with a unique story.</p>
-                        <ul>
-                            <li>Fully tailored design</li>
-                            <li>Built to fit your brand/field</li>
-                            <li>Price based on scope & requirements</li>
-                        </ul>
-                        <p class="quote">"If your dream doesn't fit into a box, we'll build a new one just for you,Contact AlfaVox on Email,Phone,LinkedIn"</p>
-                    </div>
-                </div>
-            </section>
-            
-            <div id="statusMessage" class="status-message hidden"></div>
-        </div>
-
-        <!-- Dashboard Page (unchanged) -->
-        <div class="page" id="dashboardPage">
-            <div class="dashboard-card">
-                <h2>My Account</h2>
-                <div id="trialStatusCard" class="trial-status-card hidden">
-                    <h3>Free Trial Status</h3>
-                    <div class="trial-countdown">
-                        <span id="trialDaysLeft"></span> days left in your trial
-                    </div>
-                    <p class="trial-reminder">Upgrade before expiry to retain access</p>
-                    <button id="upgradeFromTrialBtn" class="btn btn-primary">Upgrade Now</button>
-                </div>
-                <div class="user-info">
-                    <div class="info-item">
-                        <strong>Name</strong>
-                        <span id="userName"></span>
-                    </div>
-                    <div class="info-item">
-                        <strong>Email</strong>
-                        <span id="userEmail"></span>
-                    </div>
-                    <div class="info-item">
-                        <strong>Status</strong>
-                        <span id="userStatus" class="status-badge">Not subscribed</span>
-                    </div>
-                    <div class="info-item">
-                        <strong>Plan</strong>
-                        <span id="userPlan">-</span>
-                    </div>
-                </div>
-
-                <div id="subscriptionDetails" class="subscription-details hidden">
-                    <h3>Subscription Details</h3>
-                    <div class="user-info">
-                        <div class="info-item">
-                            <strong>Start Date</strong>
-                            <span id="startDate">-</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Expiry Date</strong>
-                            <span id="expiryDate">-</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Grace Period Ends</strong>
-                            <span id="gracePeriod">-</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Period (Days)</strong>
-                            <span id="periodDays">-</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Theme</strong>
-                            <span id="subscriptionTheme">-</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Transaction ID</strong>
-                            <span id="transactionId">-</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Last Updated</strong>
-                            <span id="updatedAt">-</span>
-                        </div>
-                        <div id="publicLinkContainer" class="public-link-container hidden">
-                            <p>Your Public Portfolio Link:</p>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <a id="publicLink" href="#" target="_blank" style="word-break: break-all;"></a>
-                                <button id="copyLinkBtn" class="btn btn-secondary" style="padding: 5px 10px;">Copy</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="action-buttons">
-                    <P>Access Your Admin Panel for Adding/Updating portfolio Contents </P>
-                    <button id="userAdminBtn" target="_blank" class="btn btn-primary hidden">Go to UserAdmin</button>
-                    <a href="https://forms.gle/s7y4FXhjg8FJJWAU7" target="_blank" class="btn btn-primary">Support/Issue Form</a>
-                    <button id="renewBtn" class="btn btn-primary hidden">Renew Subscription</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Subscribe Page (unchanged) -->
-        <div class="page" id="subscribePage">
-            <div id="activeSubscriptionWarning" class="subscription-warning hidden">
-                <strong>Notice:</strong> Your subscription is currently active and will expire on [expiry date]. You can renew after this date. To upgrade from a trial to a full subscription, proceed with payment.<span id="expiryDateWarning"></span>.
-            </div>
-            <div class="form-container" id="qrContainer">
-                <h2>Complete Your Subscription</h2>
-                <div class="form-group">
-                    <label for="subName">Name</label>
-                    <input type="text" id="subName" required>
-                </div>
-                <div class="form-group">
-                    <label for="subPhone">Phone Number</label>
-                    <input type="tel" id="subPhone" required placeholder="+91XXXXXXXXXX">
-                </div>
-                <div class="form-group">
-                    <label for="subPlan">Plan</label>
-                    <select id="subPlan" required>
-                        <option value="">-- Select Plan --</option>
-                        <option value="30">30 Days (₹30)</option>
-                        <option value="60">60 Days (₹60)</option>
-                        <option value="90">90 Days (₹90)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="theme">Theme Preference</label>
-                    <select id="theme" required>
-                        <option value="">-- Select Theme --</option>
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                        <option value="colorful">Colorful</option>
-                    </select>
-                </div>
-                <button id="showQRBtn" class="btn btn-primary">Show Payment QR</button>
-            </div>
-
-            <div class="form-container hidden" id="paymentProofContainer">
-                <h2>Payment Proof</h2>
-                <div class="qr-container">
-                    <p>Please scan the QR and complete the payment for your selected plan.</p>
-                    <img id="qrImage" src="" alt="Payment QR Code">
-                    <p>Amount: <strong id="qrAmount">₹0</strong></p>
-                </div>
-                <div class="form-group">
-                    <label>Upload Payment Screenshot</label>
-                    <button type="button" id="uploadPaymentProof" class="btn btn-secondary">Upload Payment Proof</button>
-                    <input type="hidden" id="paymentProofUrl">
-                    <div id="imagePreview"></div>
-                </div>
-                <button id="submitProofBtn" class="btn btn-primary">Submit Proof</button>
-                <div id="statusMessageSubscribe" class="status-message hidden"></div>
-            </div>
-        </div>
-
-        <!-- Trial Registration Modal (unchanged) -->
-        <div id="trialModal" class="modal hidden">
-            <div class="modal-content">
-                <span class="close-modal">&times;</span>
-                <h2>Start Your Free Trial</h2>
-                <form id="trialForm">
-                    <div class="form-group">
-                        <label for="trialName">Name</label>
-                        <input type="text" id="trialName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="trialPhone">Phone Number</label>
-                        <input type="tel" id="trialPhone" required placeholder="+91XXXXXXXXXX">
-                    </div>
-                    <div class="form-group">
-                        <label for="trialEmail">Email</label>
-                        <input type="email" id="trialEmail" disabled>
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="submitTrialBtn">Start Free Trial</button>
-                </form>
-            </div>
-        </div>
+  <header>
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div>
+        <h1>BlueSky Airlines — Reservation</h1>
+        <div style="font-size:13px;opacity:0.9">Search, pick seats, and book — demo UI</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn secondary" onclick="openHelp()">Help</button>
+        <button class="btn" onclick="scrollToSearch()">Book a flight</button>
+      </div>
     </div>
+  </header>
 
-    <!-- Footer Section -->
-    <footer class="site-footer">
-        <div class="footer-container">
-            <div class="footer-grid">
-                <div class="footer-brand">
-                    <img src="alfavox-logo copy.png" alt="AlfaVox Logo" class="footer-logo">
-                    <h3>AlfaVox</h3>
-                    <p>Built and Managed by Alfa IT Solution's</p>
-                    <div class="social-links">
-                        <a href="https://www.linkedin.com/company/alfa-vox/?lipi=urn%3Ali%3Apage%3Ad_flagship3_search_srp_all%3BVa2vDaofQV2NeICsi1fUWg%3D%3D"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="9487030615"><i class="fab fa-whatsapp"></i></a>
-                        <a href="mailto:alfavox@alfagroups.me"><i class="fas fa-envelope"></i></a>
-                    </div>
-                </div>
-                
-                <div class="footer-links">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="#" data-page="home">Home</a></li>
-                        <li><a href="#" data-page="dashboard">Dashboard</a></li>
-                        <li><a href="#" data-page="subscribe">Subscribe</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-links">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="policy (1).pdf" id="termsLink">Terms & Conditions</a></li>
-                        <li><a href="privacy policy.html" id="privacyLink">Privacy Policy</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-contact">
-                    <h4>Contact</h4>
-                    <ul>
-                        <li><i class="fas fa-envelope"></i> <a href="mailto:alfavox@alfagroups.me">alfavox@alfagroups.me</a></li>
-                        <li><i class="fab fa-whatsapp"></i> +91 9487030615</li>
-                        <li><i class="fab fa-linkedin-in"></i>AlfaVox</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                
-                <p>Made with ❤️ in India</p>
-            </div>
+  <main class="container">
+    <section class="card" id="search">
+      <form id="searchForm" onsubmit="event.preventDefault();searchFlights();">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <strong>Find flights</strong>
+          <small style="color:var(--muted)">One-way demo search — try "DEL" or "BOM" for airports</small>
         </div>
-    </footer>
+        <div class="search-grid">
+          <div>
+            <label>From (airport code)</label>
+            <input id="from" type="text" placeholder="DEL" required maxlength="3" />
+          </div>
+          <div>
+            <label>To (airport code)</label>
+            <input id="to" type="text" placeholder="BOM" required maxlength="3" />
+          </div>
+          <div>
+            <label>Date</label>
+            <input id="date" type="date" />
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <div style="display:flex;gap:8px">
+              <select id="passengers">
+                <option value="1">1 passenger</option>
+                <option value="2">2 passengers</option>
+                <option value="3">3 passengers</option>
+                <option value="4">4 passengers</option>
+              </select>
+              <button class="btn" type="submit">Search</button>
+            </div>
+          </div>
+        </div>
+      </form>
 
-  
-    
-    <script src="js/land.js"></script>
+      <div id="results" class="results" style="margin-top:16px"></div>
+    </section>
+
+    <section style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap">
+      <div class="card" style="flex:1;min-width:220px">
+        <h3>Quick tips</h3>
+        <ul style="color:var(--muted);padding-left:18px">
+          <li>Use three-letter airport codes (DEL, BOM, BLR).</li>
+          <li>Click "Book" on a flight to pick seats and enter passenger details.</li>
+          <li>This demo doesn't call any backend — all data is local.</li>
+        </ul>
+      </div>
+
+      <div class="card" style="width:300px;min-width:220px">
+        <h3>Demo fares</h3>
+        <div style="color:var(--muted);font-size:13px">Economy from ₹2,999 — Taxes included (demo)</div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <span class="btn secondary">Economy</span>
+          <span class="btn secondary">Premium</span>
+          <span class="btn secondary">Business</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- modal -->
+  <div id="modal" class="modal-backdrop" role="dialog" aria-hidden="true">
+    <div class="modal" role="document">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong id="modalTitle">Book flight</strong>
+        <div><button class="btn secondary" onclick="closeModal()">Close</button></div>
+      </div>
+      <div class="modal-grid">
+        <div>
+          <div style="margin-bottom:8px;color:var(--muted);font-size:13px">Select seats</div>
+          <div id="seatMap" style="background:#fff;padding:12px;border-radius:8px;border:1px solid #eef2f5"></div>
+
+          <div style="margin-top:12px">
+            <div style="margin-bottom:6px;color:var(--muted);font-size:13px">Passenger details</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <input id="pName" type="text" placeholder="Full name" />
+              <input id="pAge" type="text" placeholder="Age" />
+            </div>
+            <input id="pEmail" type="text" placeholder="Email address" style="margin-top:8px" />
+
+            <button class="btn" style="margin-top:12px" onclick="confirmBooking()">Confirm booking</button>
+          </div>
+        </div>
+
+        <aside style="background:#fbfbff;border-radius:8px;padding:12px;border:1px solid #eef2f5">
+          <div style="font-size:13px;color:var(--muted)">Summary</div>
+          <div id="summary" style="margin-top:8px"></div>
+          <div style="margin-top:12px;font-weight:700" id="totalFare">Total: ₹0</div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Built as a demo — no real reservations created. © BlueSky Airlines Demo
+  </footer>
+
+  <script>
+    // Demo flight dataset (local only)
+    const flights = [
+      { id: 'BS101', from: 'DEL', to: 'BOM', dep: '08:00', arr: '10:30', dur: '2h30', fare: 2999, class:'Economy' },
+      { id: 'BS205', from: 'DEL', to: 'BOM', dep: '12:15', arr: '14:45', dur: '2h30', fare: 3599, class:'Premium' },
+      { id: 'BS333', from: 'DEL', to: 'BLR', dep: '06:20', arr: '08:50', dur: '2h30', fare: 3999, class:'Economy' },
+      { id: 'BS404', from: 'BOM', to: 'DEL', dep: '15:00', arr: '17:30', dur: '2h30', fare: 3199, class:'Economy' }
+    ];
+
+    function scrollToSearch(){document.getElementById('search').scrollIntoView({behavior:'smooth'})}
+    function openHelp(){alert('This is a demo UI. Try: From=DEL To=BOM and click Search.')}
+
+    function searchFlights(){
+      const from = document.getElementById('from').value.trim().toUpperCase();
+      const to = document.getElementById('to').value.trim().toUpperCase();
+      const results = document.getElementById('results');
+      results.innerHTML = '';
+      if(!from || !to){results.innerHTML = '<div style="color:#ef4444">Please enter both origin and destination</div>';return}
+
+      const matched = flights.filter(f => f.from === from && f.to === to);
+      if(matched.length === 0){results.innerHTML = '<div style="color:var(--muted)">No flights found for this route in demo data.</div>'; return}
+
+      matched.forEach(f => {
+        const el = document.createElement('div'); el.className='flight card';
+        el.innerHTML = `
+          <h3>${f.id} — ${f.from} → ${f.to}</h3>
+          <div class="meta">${f.dep} • ${f.arr} • ${f.dur} • ${f.class}</div>
+          <div class="fare">₹${f.fare.toLocaleString()}</div>
+          <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+            <button class="btn secondary" onclick="viewDetails('${f.id}')">Details</button>
+            <button class="btn" onclick="openBooking('${f.id}')">Book</button>
+          </div>
+        `;
+        results.appendChild(el);
+      });
+    }
+
+    function viewDetails(id){
+      const f = flights.find(x=>x.id===id);
+      alert(`${f.id}\nRoute: ${f.from} → ${f.to}\nDeparture: ${f.dep}\nArrival: ${f.arr}\nDuration: ${f.dur}\nFare: ₹${f.fare}`);
+    }
+
+    // Modal and booking logic
+    let currentFlight = null;
+    let selectedSeats = [];
+
+    function openBooking(flightId){
+      currentFlight = flights.find(f=>f.id===flightId);
+      document.getElementById('modalTitle').innerText = `Book ${currentFlight.id} — ${currentFlight.from}→${currentFlight.to}`;
+      renderSeatMap();
+      renderSummary();
+      document.getElementById('modal').style.display = 'flex';
+      document.getElementById('modal').setAttribute('aria-hidden','false');
+    }
+
+    function closeModal(){
+      document.getElementById('modal').style.display = 'none';
+      document.getElementById('modal').setAttribute('aria-hidden','true');
+      selectedSeats = [];
+    }
+
+    // Simple seat map generator (rows A-F, cols 1-6)
+    function renderSeatMap(){
+      const seatMap = document.getElementById('seatMap'); seatMap.innerHTML='';
+      const taken = generateTakenSeats();
+      for(let r=0;r<6;r++){
+        const rowLabel = String.fromCharCode(65 + r);
+        const rowWrap = document.createElement('div');
+        for(let c=1;c<=6;c++){
+          const seatId = `${rowLabel}${c}`;
+          const seat = document.createElement('button');
+          seat.className='seat ' + (taken.includes(seatId) ? 'taken' : 'available');
+          seat.innerText = seatId;
+          seat.dataset.seat = seatId;
+          seat.onclick = () => toggleSeat(seat, seatId);
+          rowWrap.appendChild(seat);
+        }
+        seatMap.appendChild(rowWrap);
+      }
+    }
+
+    function generateTakenSeats(){
+      // pseudo-random taken seats based on flight id (stable per flight)
+      const seed = currentFlight.id.split('').reduce((s,ch)=>s + ch.charCodeAt(0),0);
+      const rng = mulberry32(seed);
+      const taken = [];
+      const all = [];
+      for(let r=0;r<6;r++) for(let c=1;c<=6;c++) all.push(`${String.fromCharCode(65+r)}${c}`);
+      for(const s of all){ if(rng() > 0.78) taken.push(s); }
+      return taken;
+    }
+
+    function toggleSeat(button, id){
+      if(button.classList.contains('taken')) return; // can't select
+      if(button.classList.contains('selected')){
+        button.classList.remove('selected');
+        selectedSeats = selectedSeats.filter(x=>x!==id);
+      } else {
+        selectedSeats.push(id);
+        button.classList.add('selected');
+      }
+      renderSummary();
+    }
+
+    function renderSummary(){
+      const summary = document.getElementById('summary');
+      summary.innerHTML = '';
+      const pCount = Number(document.getElementById('passengers').value || 1);
+      const seatList = selectedSeats.length ? selectedSeats.join(', ') : 'None';
+      summary.innerHTML = `Flight: <div style="font-weight:600">${currentFlight ? currentFlight.id : '-'} </div>`
+                         + `<div style="color:var(--muted);margin-top:6px">Seats: ${seatList}</div>`
+                         + `<div style="color:var(--muted);margin-top:6px">Passengers: ${pCount}</div>`;
+      const total = (currentFlight ? currentFlight.fare : 0) * pCount;
+      document.getElementById('totalFare').innerText = `Total: ₹${total.toLocaleString()}`;
+    }
+
+    function confirmBooking(){
+      const name = document.getElementById('pName').value.trim();
+      const email = document.getElementById('pEmail').value.trim();
+      const age = document.getElementById('pAge').value.trim();
+      if(!name || !email){ alert('Please enter passenger name and email.'); return }
+      const pCount = Number(document.getElementById('passengers').value || 1);
+      const booking = {
+        id: 'BK' + Math.random().toString(36).slice(2,8).toUpperCase(),
+        flight: currentFlight.id,
+        passenger: {name,age,email},
+        seats: selectedSeats.slice(0,pCount),
+        total: currentFlight.fare * pCount
+      };
+      closeModal();
+      alert(`Booking confirmed!\nReference: ${booking.id}\nFlight: ${booking.flight}\nSeats: ${booking.seats.join(', ') || 'Auto-assigned'}\nTotal: ₹${booking.total}`);
+    }
+
+    // small seeded RNG for deterministic 'taken' seats
+    function mulberry32(a) {
+      return function() {
+        var t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      }
+    }
+
+    // initialize with example values
+    document.addEventListener('DOMContentLoaded', ()=>{
+      document.getElementById('from').value='DEL';
+      document.getElementById('to').value='BOM';
+      searchFlights();
+    });
+  </script>
 </body>
 </html>
